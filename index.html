@@ -16,6 +16,34 @@ input,textarea,select,button{font-family:inherit;font-size:inherit}
 
 .shell{display:grid;grid-template-columns:300px 1fr;grid-template-rows:50px 1fr;height:100vh;overflow:hidden}
 
+/* ── MOBILE OVERLAY SIDEBAR ── */
+.mob-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:299;backdrop-filter:blur(2px)}
+.mob-overlay.open{display:block}
+.mob-close-btn{display:none}
+.mob-menu-btn{display:none}
+
+@media(max-width:768px){
+  body{overflow:auto;height:auto}
+  .shell{grid-template-columns:1fr;grid-template-rows:50px 1fr auto;height:auto;min-height:100vh}
+  .sidebar{
+    position:fixed;left:0;top:0;bottom:0;width:min(300px,90vw);
+    transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);
+    z-index:300;overflow-y:auto
+  }
+  .sidebar.mob-open{transform:translateX(0)}
+  .main{grid-column:1;min-height:calc(100vh - 50px)}
+  .frame-wrap{margin:8px;border-radius:8px}
+  .mob-close-btn{display:flex;position:absolute;top:10px;right:10px;z-index:10;width:28px;height:28px;border-radius:6px;background:#0F1C2E;border:1px solid #1E293B;color:#64748B;align-items:center;justify-content:center;font-size:16px;cursor:pointer;line-height:1}
+  .mob-menu-btn{display:flex}
+  .tb-center{display:none}
+  .tb-name{font-size:12px}
+  .tb-sub{display:none}
+  .btn span{display:none}
+  .btn svg{width:15px;height:15px}
+  .btn{padding:6px 8px}
+  .topbar{padding:0 10px;gap:8px}
+}
+
 /* TOPBAR */
 .topbar{grid-column:1/-1;background:#04080F;border-bottom:1px solid #0F1C2E;display:flex;align-items:center;justify-content:space-between;padding:0 16px;gap:12px;z-index:200}
 .tb-brand{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -122,14 +150,20 @@ details.cl .cb{padding:0 11px 11px;display:flex;flex-direction:column;gap:7px}
 <body>
 
 <div class="toast" id="toast"></div>
+<div class="mob-overlay" id="mob-overlay" onclick="closeSidebar()"></div>
 
 <div class="shell">
 
 <!-- ══ TOPBAR ══ -->
 <header class="topbar">
-  <div class="tb-brand">
-    <div class="tb-logo">PE</div>
-    <div><div class="tb-name">Portfolio Editor Pro</div><div class="tb-sub">Fill in → preview → download</div></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="mob-menu-btn btn btn-ghost" onclick="openSidebar()" aria-label="Menu" style="padding:6px 8px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="tb-brand">
+      <div class="tb-logo">PE</div>
+      <div><div class="tb-name">Portfolio Editor Pro</div><div class="tb-sub">Fill in → preview → download</div></div>
+    </div>
   </div>
   <div class="tb-center">
     <button class="pm-btn on" id="pm-l" onclick="setDark(false)">☀ Light</button>
@@ -152,7 +186,8 @@ details.cl .cb{padding:0 11px 11px;display:flex;flex-direction:column;gap:7px}
 </header>
 
 <!-- ══ SIDEBAR ══ -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
+  <button class="mob-close-btn" onclick="closeSidebar()" aria-label="Close">×</button>
   <nav class="tabs-nav">
     <button class="tb on" onclick="tab('basics',this)"><span class="ti">👤</span>Personal</button>
     <button class="tb" onclick="tab('photos',this)"><span class="ti">📸</span>Photos</button>
@@ -245,6 +280,24 @@ Open-Source Contributor.</textarea></div>
       <div class="f"><label>GitHub URL</label><input id="c-gh" value="https://github.com/yourusername" oninput="render()"></div>
       <div class="f"><label>Twitter / X URL</label><input id="c-tw" value="https://twitter.com/yourusername" oninput="render()"></div>
       <div class="f"><label>Calendly / Booking Link</label><input id="c-cal" value="https://calendly.com/yourusername" oninput="render()"></div>
+      <div class="dv">CV / Resume <span style="color:#1E3A5F;font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+      <div class="f">
+        <label>Upload PDF — adds a download button to your portfolio</label>
+        <div class="upzone" id="uz-cv" onclick="document.getElementById('fi-cv').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="event.preventDefault();this.classList.remove('drag');handleCVDrop(event)">
+          <input type="file" id="fi-cv" accept=".pdf,application/pdf" style="display:none" onchange="handleCV(this)">
+          <div id="ph-cv"><div style="font-size:22px;margin-bottom:5px">📄</div><div class="upt"><strong>Click or drag CV/Resume here</strong>PDF only · Max 5 MB</div><div class="uph">Embedded as a download button in your portfolio</div></div>
+          <div id="pv-cv" style="display:none;align-items:center;gap:8px;justify-content:center">
+            <span style="font-size:20px">✅</span>
+            <div><div style="font-size:12px;font-weight:600;color:#34D399" id="cv-name">resume.pdf</div><div style="font-size:10px;color:#334155;margin-top:1px">Ready to embed</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:5px">
+          <button class="add-row" style="flex:1" onclick="clearCV()">✕ Remove CV</button>
+          <label style="flex:1" id="cv-label-btn">
+            <div class="add-row" style="margin-top:0;cursor:pointer" onclick="document.getElementById('fi-cv').click()">↑ Replace CV</div>
+          </label>
+        </div>
+      </div>
       <div class="dv">Contact Form</div>
       <div class="f"><label>Formspree ID <span style="color:#1E3A5F;font-weight:400;text-transform:none;letter-spacing:0">(free at formspree.io)</span></label><input id="c-form" value="YOUR_FORM_ID" placeholder="e.g. xpznkgvw" oninput="render()"></div>
       <div class="dv">SEO</div>
@@ -304,6 +357,7 @@ let accent = '#E11D48';
 let pvDark  = false;
 let imgs    = { hero: null, about: null };
 let pImgs   = {}; // project index → base64
+let cvData  = null; // { name, base64 }
 
 let skills = [
   {name:'PCB Design (KiCad / Altium)',level:92},{name:'C / C++ (Embedded)',level:88},
@@ -345,6 +399,50 @@ function toast(msg, type='ok'){
 }
 
 // ══════════════════════════════════════════════════════════════
+// MOBILE SIDEBAR
+// ══════════════════════════════════════════════════════════════
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('mob-open');
+  document.getElementById('mob-overlay').classList.add('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('mob-open');
+  document.getElementById('mob-overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════════════════
+// CV HANDLING
+// ══════════════════════════════════════════════════════════════
+function handleCV(inp){
+  const file=inp.files[0];
+  if(!file) return;
+  if(file.size > 5*1024*1024){ toast('CV too large — max 5 MB','warn'); return; }
+  if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf')){ toast('Please upload a PDF file','warn'); return; }
+  const r=new FileReader();
+  r.onload=e=>{ cvData={name:file.name,base64:e.target.result}; applyCVPreview(); render(); toast('✓ CV uploaded!'); };
+  r.readAsDataURL(file);
+}
+function handleCVDrop(ev){
+  const f=ev.dataTransfer.files[0];
+  if(f){ const fakeInp={files:[f]}; handleCV(fakeInp); }
+}
+function applyCVPreview(){
+  const ph=document.getElementById('ph-cv');
+  const pv=document.getElementById('pv-cv');
+  const nm=document.getElementById('cv-name');
+  const uz=document.getElementById('uz-cv');
+  if(cvData){ if(ph)ph.style.display='none'; if(pv){pv.style.display='flex';} if(nm)nm.textContent=cvData.name; if(uz)uz.classList.add('has'); }
+  else { if(ph)ph.style.display='block'; if(pv)pv.style.display='none'; if(uz)uz.classList.remove('has'); }
+}
+function clearCV(){
+  cvData=null;
+  document.getElementById('fi-cv').value='';
+  applyCVPreview();
+  render();
+  toast('CV removed');
+}
+
+// ══════════════════════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════════════════════
 function tab(id, btn){
@@ -352,6 +450,8 @@ function tab(id, btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   btn.classList.add('on');
   document.getElementById('p-'+id).classList.add('on');
+  // Close sidebar on mobile after tab selection
+  if(window.innerWidth<=768) closeSidebar();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -663,6 +763,7 @@ function render(){
         <div style="background:${bg2};border:1px solid ${bdr};border-radius:6px;padding:6px 9px;font-size:9px;color:${text2};text-align:center">⌥ GitHub</div>
         <div style="background:${bg2};border:1px solid ${bdr};border-radius:6px;padding:6px 9px;font-size:9px;color:${text2};text-align:center">📅 Book a Call</div>
       </div>
+      ${cvData ? `<div style="margin-top:8px"><div style="background:${accent};border-radius:6px;padding:7px 10px;font-size:9.5px;font-weight:600;color:#fff;text-align:center;cursor:pointer">📄 Download CV / Resume</div></div>` : ''}
     </div>
 
     <!-- FOOTER -->
@@ -680,7 +781,7 @@ function saveData(){
   try{
     const fields={};
     FIELDS.forEach(id=>{ fields[id]=G(id); });
-    const payload={v:3,accent,skills,experiences,projects,pImgs,fields};
+    const payload={v:3,accent,skills,experiences,projects,pImgs,fields,cvData};
     const imgPayload={imgs};
     localStorage.setItem('pe_v3',JSON.stringify(payload));
     try{ localStorage.setItem('pe_imgs_v3',JSON.stringify(imgPayload)); }catch(e){}
@@ -698,6 +799,7 @@ function loadData(){
     if(d.experiences) experiences=d.experiences;
     if(d.projects) projects=d.projects;
     if(d.pImgs) pImgs=d.pImgs;
+    if(d.cvData){ cvData=d.cvData; applyCVPreview(); }
     if(d.fields) Object.entries(d.fields).forEach(([id,v])=>{ const el=document.getElementById(id); if(el) el.value=v; });
     const imgRaw=localStorage.getItem('pe_imgs_v3');
     if(imgRaw){
@@ -910,7 +1012,7 @@ body{font-family:'DM Sans',system-ui,sans-serif}
       <button @click="toggleDark()" type="button" class="w-9 h-9 rounded-full border border-navy/20 dark:border-cream/20 flex items-center justify-center hover-accent transition-colors" :aria-label="darkMode?'Switch to light':'Switch to dark'">
         <span x-show="!darkMode">🌙<\/span><span x-show="darkMode">☀️<\/span>
       <\/button>
-      <a href="cv.pdf" download class="px-5 py-2 rounded-full text-white text-sm font-semibold hover:opacity-90 transition shadow" style="background:${accent}">Download CV<\/a>
+      ${cvData ? `<a href="${cvData.base64}" download="${cvData.name}" class="px-5 py-2 rounded-full text-white text-sm font-semibold hover:opacity-90 transition shadow" style="background:${accent}">📄 Download CV<\/a>` : ''}
     <\/div>
     <button @click="mn=!mn" type="button" class="md:hidden flex flex-col gap-1.5 p-1.5" aria-label="Toggle menu">
       <span class="w-5 h-0.5 bg-current transition-transform" :class="mn?'rotate-45 translate-y-2':''"><\/span>
@@ -927,7 +1029,7 @@ body{font-family:'DM Sans',system-ui,sans-serif}
       <a href="#contact" @click="mn=false" class="hover-accent transition-colors">Contact<\/a>
       <div class="flex items-center gap-3 pt-2 border-t border-navy/10 dark:border-cream/10">
         <button @click="toggleDark()" type="button" class="text-xl"><span x-show="!darkMode">🌙<\/span><span x-show="darkMode">☀️<\/span><\/button>
-        <a href="cv.pdf" download class="px-4 py-2 rounded-full text-white text-xs font-semibold" style="background:${accent}">Download CV<\/a>
+        ${cvData ? `<a href="${cvData.base64}" download="${cvData.name}" class="px-4 py-2 rounded-full text-white text-xs font-semibold" style="background:${accent}">📄 Download CV<\/a>` : ''}
       <\/div>
     <\/div>
   <\/div>
@@ -1047,6 +1149,7 @@ body{font-family:'DM Sans',system-ui,sans-serif}
       <a href="mailto:${email}" class="opacity-50 hover:opacity-100 transition-all hover-accent">✉ ${email}<\/a>
       <a href="${li}" target="_blank" class="opacity-50 hover:opacity-100 transition-all hover-accent">in LinkedIn<\/a>
       <a href="${cal}" target="_blank" class="opacity-50 hover:opacity-100 transition-all hover-accent">📅 Book a Call<\/a>
+      ${cvData ? `<a href="${cvData.base64}" download="${cvData.name}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-white text-sm font-semibold hover:opacity-90 transition shadow-lg" style="background:${accent}">📄 Download CV<\/a>` : ''}
     <\/div>
   <\/div>
 <\/section>
@@ -1060,6 +1163,7 @@ body{font-family:'DM Sans',system-ui,sans-serif}
       <a href="${gh}" target="_blank" class="hover:opacity-100 hover-accent transition-all text-xs font-semibold">GitHub<\/a>
       <a href="${li}" target="_blank" class="hover:opacity-100 hover-accent transition-all text-xs font-semibold">LinkedIn<\/a>
       <a href="mailto:${email}" class="hover:opacity-100 hover-accent transition-all text-xs font-semibold">Email<\/a>
+      ${cvData ? `<a href="${cvData.base64}" download="${cvData.name}" class="hover:opacity-100 hover-accent transition-all text-xs font-semibold">CV<\/a>` : ''}
     <\/div>
   <\/div>
 <\/footer>
