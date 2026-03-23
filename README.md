@@ -23,7 +23,7 @@ No npm. No build step. No server. Just one file.
 
 ## 🚀 Live Demo
 
-👉 **[Try the Editor Live](https://yourusername.github.io/portfolio-editor)**
+👉 **[Try the Editor Live](https://portfolio-editor-pro-live.netlify.app/)**
 
 > Replace the link above with your GitHub Pages URL after deploying.
 
@@ -195,10 +195,10 @@ Built on the shoulders of great open-source work — Tailwind CSS, Alpine.js, Go
   <br/>
   <strong>Built for everyone who deserves a great portfolio but shouldn't need to learn to code to have one.</strong>
   <br/><br/>
-  <a href="https://yourusername.github.io/portfolio-editor"><strong>Try it live →</strong></a>
+  <a href="https://portfolio-editor-pro-live.netlify.app/"><strong>Try it live →</strong></a>
   &nbsp;&nbsp;·&nbsp;&nbsp;
-  <a href="https://github.com/yourusername/portfolio-editor/issues">Report a bug</a>
+  <a href="https://github.com/dhananjayyadav95/Portfolio_Editor/issues">Report a bug</a>
   &nbsp;&nbsp;·&nbsp;&nbsp;
-  <a href="https://github.com/yourusername/portfolio-editor/pulls">Contribute</a>
+  <a href="https://github.com/dhananjayyadav95/Portfolio_Editor/pulls">Contribute</a>
   <br/><br/>
 </div>
